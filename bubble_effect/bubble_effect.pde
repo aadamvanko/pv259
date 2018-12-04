@@ -1,3 +1,5 @@
+import processing.pdf.*;
+
 float BUBBLE_RADIUS; // set in setup after size initialization
 final int FAST_PARTICLES_COLOR_BEGIN = 180;
 final int FAST_PARTICLES_COLOR_END = 330;
@@ -141,6 +143,7 @@ class Bubble {
 }
 
 Bubble bubble;
+boolean takeScreenshot = false;
 
 void setup() {
   //fullScreen(P2D);
@@ -157,6 +160,9 @@ void setup() {
 }
 
 void draw() {
+  if (takeScreenshot) {
+    beginRecord(PDF, "frame-####.pdf");
+  }
   noStroke();
   //fill(#000000, 192);
   //rect(width / 2, height / 2, width, height);
@@ -165,9 +171,13 @@ void draw() {
   bubble.update();
   bubble.draw();
   
+  if (takeScreenshot) {
+    endRecord();
+    takeScreenshot = false;
+  }
   println(frameRate);
 }
 
 void keyPressed() {
-  if (key == 's' || key == 'S') saveFrame("####.png");
+  if (key == 's' || key == 'S') takeScreenshot = true;
 }
