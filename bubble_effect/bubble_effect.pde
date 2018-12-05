@@ -1,3 +1,6 @@
+import org.apache.pdfbox.pdmodel.*;
+import org.apache.pdfbox.pdmodel.graphics.*;
+import org.apache.pdfbox.cos.*;
 import processing.pdf.*;
 import g4p_controls.*;
 
@@ -207,7 +210,7 @@ void setup() {
 
 void draw() {
   if (takeScreenshot) {
-    beginRecord(PDF, "screenshot-####.pdf");
+    beginRecord(PDF, "/data/screenshot.pdf");
   }
   noStroke();
   //fill(#000000, 192);
@@ -220,7 +223,7 @@ void draw() {
       text("Mouse adds speed to particles on both axes. Press v to show/hide options.", 0, 0);
       text("Press c to hide this.", 0, 15);
       text("Press s to take screenshot to pdf.", 0, 30);
-      text("Press r to start/stop recording frames to png.", 0, 30);
+      text("Press r to start/stop recording frames to png.", 0, 45);
     }  
   }
   else {
@@ -237,6 +240,8 @@ void draw() {
   
   if (takeScreenshot) {
     endRecord();
+    File file = new File(dataPath("screenshot.pdf"));
+    correctPDFBlendMode(file, COSName.LIGHTEN);
     takeScreenshot = false;
   }
   
@@ -246,7 +251,32 @@ void draw() {
     fill(#ff0000);
     ellipse(width - 15, 15, 7, 7);
   }
-  println(frameRate);
+  //println(frameRate);
+}
+
+void correctPDFBlendMode(File pdf, COSName bm) {
+  PDDocument doc = null; //Instantiates a PDDocument object
+  try {
+    doc = PDDocument.load(pdf); //Loads our pdf
+    PDPage page = (PDPage) doc.getPage(0);  //Gets the page inside of the PDF document. Assumes your PDF has a single page.
+    for (COSName c : page.getResources().getExtGStateNames()) { //Foreach of the graphics states...
+      page.getResources().getExtGState(c).getCOSObject().setItem(COSName.BM, bm); //Change the blend mode
+    }
+    doc.removePage(0); //Deletes the old first page
+    doc.addPage(page); //Adds in our modified page with changed blend mode
+    doc.save(pdf); //Saves the document to the same file location
+    println("done");
+  } catch (Exception e) {
+    e.printStackTrace();
+  } finally {
+    if (doc != null) {
+      try {
+        doc.close();
+      } catch (IOException e) {
+        println("Problem when closing doc: " + e.getMessage());
+      }
+    }
+  }
 }
 
 void keyPressed() {
